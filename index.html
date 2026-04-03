@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script type="module">
+
+        const memory = new WebAssembly.Memory({
+            initial: 1,
+        });
+
+        const summands = new DataView(memory.buffer);
+
+        const input = "3 4 + 6 2 + 8 9 + 4 3 + * * *";
+        const inputData = input.split(' ').map(x => {
+            if (x == '+') {
+                return -1;
+            }
+            if (x == '*') {
+                return -2;
+            }
+            return x;
+        });
+
+        inputData.push(-3);
+
+        for (let i = 0; i < inputData.length; i++) {
+            summands.setInt32(i * 4, inputData[i], true);
+        }
+
+        const result = await WebAssembly.instantiateStreaming(fetch("wasm.wasm"), {  js: { mem: memory }, });
+
+        const res = result.instance.exports.add()
+
+        console.log(res);
+
+    </script>
+</body>
+</html>
