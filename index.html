@@ -11,15 +11,19 @@
     <h1>Kellerautomat</h1>
     <p>Implementiert in WebAssembly</p>
 
-    <input id="inputBox" value="3 4 + 6 2 + 8 9 + 4 3 + * * *" type="text">
+    <div>
+        <input id="inputBox" value="3 4 + 6 2 + 8 9 + 4 3 + * * *" type="text">
+        <span id="highlightedInput"></span>
+    </div>
     <button id="runButton">Run (Laufmodus)</button>
-    <button id="runButton">Run (Step-Modus)</button>
+    <button id="runStepedButton">Run (Step-Modus)</button>
     <p>Result: <span id="resultSpan"></span></p>
 </body>
 
 <script type="module">
 
     document.querySelector("#runButton").addEventListener("click", evaluateKeller)
+    document.querySelector("#runStepedButton").addEventListener("click", evaluateKellerStepped)
 
     async function evaluateKeller() {
         const input = document.querySelector("#inputBox").value;
@@ -34,7 +38,7 @@
             return x;
         });
 
-        document.querySelector("#resultSpan").innerHTML = execute(inputData);
+        document.querySelector("#resultSpan").innerHTML = await execute(inputData);
     }
 
     async function evaluateKellerStepped() {
@@ -50,11 +54,38 @@
             return x;
         });
 
-        for (var i = 1; i < inputData.length; i++) {
-            const stack = execute(inputData.slice(0, i));
-        }
+        for (var i = 0; i < inputData.length; i++) {
+            displayInputHighlighted(input.split(' '), i);
+        
+            const inputDataSliced = inputData.slice(0, i + 1);
+            const stack = await execute(inputDataSliced);
 
-        document.querySelector("#resultSpan").innerHTML = execute(inputData);
+            //console.log(inputDataSliced, [...stack])
+            document.querySelector("#resultSpan").innerHTML = stack;
+            await wait(1000);
+        }
+    }
+
+    function displayInputHighlighted(inputData, highlightedIndex){
+        const highlightedInput = document.querySelector("#highlightedInput");
+        highlightedInput.innerHTML = '';
+
+        for(var i = 0; i < inputData.length; i++) {
+            const span = document.createElement('span');
+            highlightedInput.appendChild(span);
+            span.textContent = inputData[i];
+            if (i == highlightedIndex) {
+                span.style.backgroundColor = 'red'
+            }
+        }
+    }
+
+    async function wait(time){
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve();
+            }, time);
+        });
     }
 
     async function execute(inputData) {
@@ -70,9 +101,9 @@
 
         const result = await WebAssembly.instantiateStreaming(fetch("wasm.wasm"), { js: { mem: memory }, });
 
-        const res = result.instance.exports.execute(inputData.length * 4)
+        const sizeOfStack = result.instance.exports.execute(inputData.length * 4)
 
-        return res;
+        return array.slice(inputData.length + 1, (sizeOfStack / 4) + 1)
     }
 </script>
 

@@ -124,7 +124,6 @@
 
         ;; return value at $stackPointer
         local.get $stackPointer
-        i32.load
     )
     (export "execute" (func $execute))
 )
