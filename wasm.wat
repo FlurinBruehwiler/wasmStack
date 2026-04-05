@@ -122,7 +122,7 @@
         
         )
 
-        ;; return value at $stackPointer
+        ;; $stackPointer (size of stack )
         local.get $stackPointer
     )
     (export "execute" (func $execute))

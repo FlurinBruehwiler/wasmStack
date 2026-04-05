@@ -8,15 +8,14 @@
 </head>
 
 <body>
-    <h1>Kellerautomat</h1>
-    <p>Implementiert in WebAssembly</p>
+    <p>Basic stack machine that supports addition and multiplication implemented in WebAssembly text (wat).</p>
 
     <div>
         <input id="inputBox" value="3 4 + 6 2 + 8 9 + 4 3 + * * *" type="text">
         <span id="highlightedInput"></span>
     </div>
-    <button id="runButton">Run (Laufmodus)</button>
-    <button id="runStepedButton">Run (Step-Modus)</button>
+    <button id="runButton">Run (immediate)</button>
+    <button id="runStepedButton">Run (step by step)</button>
     <p>Result: <span id="resultSpan"></span></p>
 </body>
 
