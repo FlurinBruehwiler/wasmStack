@@ -1,20 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
-    <script type="module">
+    <h1>Kellerautomat</h1>
+    <p>Implementiert in WebAssembly</p>
 
-        const memory = new WebAssembly.Memory({
-            initial: 1,
-        });
+    <input id="inputBox" value="3 4 + 6 2 + 8 9 + 4 3 + * * *" type="text">
+    <button id="runButton">Run (Laufmodus)</button>
+    <button id="runButton">Run (Step-Modus)</button>
+    <p>Result: <span id="resultSpan"></span></p>
+</body>
 
-        const summands = new DataView(memory.buffer);
+<script type="module">
 
-        const input = "3 4 + 6 2 + 8 9 + 4 3 + * * *";
+    document.querySelector("#runButton").addEventListener("click", evaluateKeller)
+
+    async function evaluateKeller() {
+        const input = document.querySelector("#inputBox").value;
+
         const inputData = input.split(' ').map(x => {
             if (x == '+') {
                 return -1;
@@ -25,18 +34,46 @@
             return x;
         });
 
-        inputData.push(-3);
+        document.querySelector("#resultSpan").innerHTML = execute(inputData);
+    }
 
-        for (let i = 0; i < inputData.length; i++) {
-            summands.setInt32(i * 4, inputData[i], true);
+    async function evaluateKellerStepped() {
+        const input = document.querySelector("#inputBox").value;
+
+        const inputData = input.split(' ').map(x => {
+            if (x == '+') {
+                return -1;
+            }
+            if (x == '*') {
+                return -2;
+            }
+            return x;
+        });
+
+        for (var i = 1; i < inputData.length; i++) {
+            const stack = execute(inputData.slice(0, i));
         }
 
-        const result = await WebAssembly.instantiateStreaming(fetch("wasm.wasm"), {  js: { mem: memory }, });
+        document.querySelector("#resultSpan").innerHTML = execute(inputData);
+    }
 
-        const res = result.instance.exports.add()
+    async function execute(inputData) {
+        const memory = new WebAssembly.Memory({
+            initial: 1,
+        });
 
-        console.log(res);
+        const array = new Int32Array(memory.buffer);
 
-    </script>
-</body>
+        for (let i = 0; i < inputData.length; i++) {
+            array[i] = inputData[i]
+        }
+
+        const result = await WebAssembly.instantiateStreaming(fetch("wasm.wasm"), { js: { mem: memory }, });
+
+        const res = result.instance.exports.execute(inputData.length * 4)
+
+        return res;
+    }
+</script>
+
 </html>

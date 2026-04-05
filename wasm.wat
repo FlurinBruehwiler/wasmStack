@@ -1,128 +1,130 @@
 (module
     (import "js" "mem" (memory 1))
-    (func $add (result i32)
+    (func $execute (param $inputLength i32) (result i32)
         
         (local $i i32)
         (local $temp i32)
         
         (local $stackPointer i32)
 
-        i32.const 100
+        ;; $stackPointer = $inputLength;
+        local.get $inputLength
         local.set $stackPointer
 
-        i32.const 0
+        ;; $i = -4
+        i32.const -4
         local.set $i
 
-        (loop $my_loop
+        (block $return_block
+        
+            (loop $loop
 
-            local.get $i
-            i32.load
+                ;; i += 4
+                local.get $i
+                i32.const 4
+                i32.add
+                local.set $i
 
-            local.tee $temp
+                ;; if ($i == inputLength) goto $return_block
+                local.get $i
+                local.get $inputLength
+                i32.eq
+                br_if $return_block
 
-            i32.const -1
-            i32.eq
+                ;; $temp = data[$i]
+                local.get $i
+                i32.load
+                local.set $temp
 
-            (if
-                (then
-                    local.get $stackPointer
-                    i32.load
+                ;; handle +
+                ;; $temp == -1
+                local.get $temp
+                i32.const -1
+                i32.eq
 
-                    ;; $stackPointer--
-                    local.get $stackPointer
-                    i32.const -4
-                    i32.add
-                    local.set $stackPointer
+                (if
+                    (then
+                        ;; load value at stackpointer
+                        local.get $stackPointer
+                        i32.load
 
-                    local.get $stackPointer
-                    i32.load
+                        ;; $stackPointer -= 4
+                        local.get $stackPointer
+                        i32.const -4
+                        i32.add
+                        local.set $stackPointer
 
-                    
-                    i32.add
-                    local.set $temp
+                        ;; load value at stackpointer                    
+                        local.get $stackPointer
+                        i32.load
 
-                    local.get $stackPointer
-                    local.get $temp
+                        ;; add and and store in temp
+                        i32.add
+                        local.set $temp
 
-                    i32.store
+                        ;; stack[$stackPointer] = $temp
+                        local.get $stackPointer
+                        local.get $temp
+                        i32.store
 
-                    local.get $i
-                    i32.const 4
-                    i32.add
-                    local.set $i
-
-                    br $my_loop
-                )
-                (else
-                    local.get $temp
-                    i32.const -2
-                    i32.eq
-
-                    (if
-                        (then
-
-                            local.get $stackPointer
-                            i32.load
-
-                            ;; $stackPointer--
-                            local.get $stackPointer
-                            i32.const -4
-                            i32.add
-                            local.set $stackPointer
-
-                            local.get $stackPointer
-                            i32.load
-
-                            i32.mul
-                            local.set $temp
-
-                            local.get $stackPointer
-                            local.get $temp
-
-                            i32.store
-
-                            local.get $i
-                            i32.const 4
-                            i32.add
-                            local.set $i
-
-                            br $my_loop
-                        )
-                        (else
-                            local.get $temp
-                            i32.const -3
-                            i32.eq
-
-                            (if
-                                (then
-                                    
-                                )
-                                (else
-                                    local.get $stackPointer
-                                    i32.const 4
-                                    i32.add
-                                    local.set $stackPointer
-
-                                    local.get $stackPointer
-                                    local.get $temp
-                                    i32.store 
-
-                                    local.get $i
-                                    i32.const 4
-                                    i32.add
-                                    local.set $i
-
-                                    br $my_loop
-                                )
-                            )
-                        )
+                        br $loop
                     )
                 )
+
+                ;; handle *
+                ;; $temp == -2
+                local.get $temp
+                i32.const -2
+                i32.eq
+
+                (if
+                    (then
+                        ;; load value at stackpointer
+                        local.get $stackPointer
+                        i32.load
+
+                        ;; $stackPointer -= 4
+                        local.get $stackPointer
+                        i32.const -4
+                        i32.add
+                        local.set $stackPointer
+
+                        ;; load value at stackpointer  
+                        local.get $stackPointer
+                        i32.load
+
+                        ;; mul and and store in temp
+                        i32.mul
+                        local.set $temp
+
+                        ;; stack[$stackPointer] = $temp
+                        local.get $stackPointer
+                        local.get $temp
+                        i32.store
+
+                        br $loop
+                    )
+                )
+
+                ;; stackPointer += 4  
+                local.get $stackPointer
+                i32.const 4
+                i32.add
+                local.set $stackPointer
+
+                ;; stack[$stackPointer] = $temp
+                local.get $stackPointer
+                local.get $temp
+                i32.store 
+
+                br $loop
             )
+        
         )
 
+        ;; return value at $stackPointer
         local.get $stackPointer
         i32.load
     )
-    (export "add" (func $add))
+    (export "execute" (func $execute))
 )
