@@ -37,7 +37,8 @@
             return x;
         });
 
-        document.querySelector("#resultSpan").innerHTML = await execute(inputData);
+        const res = await execute(inputData);
+        document.querySelector("#resultSpan").innerHTML = (res.length == 1 ? "Akzeptierend: " : "Verwerfend: ") + res;
     }
 
     async function evaluateKellerStepped() {
@@ -53,23 +54,28 @@
             return x;
         });
 
+        let stack;
         for (var i = 0; i < inputData.length; i++) {
             displayInputHighlighted(input.split(' '), i);
-        
-            const inputDataSliced = inputData.slice(0, i + 1);
-            const stack = await execute(inputDataSliced);
 
-            //console.log(inputDataSliced, [...stack])
+            const inputDataSliced = inputData.slice(0, i + 1);
+            stack = await execute(inputDataSliced);
+
+            if (stack.length == 0)
+                break; //verwerfend
+
             document.querySelector("#resultSpan").innerHTML = stack;
             await wait(1000);
         }
+
+        document.querySelector("#resultSpan").innerHTML = (stack.length == 1 ? "Akzeptierend: " : "Verwerfend: ") + stack;
     }
 
-    function displayInputHighlighted(inputData, highlightedIndex){
+    function displayInputHighlighted(inputData, highlightedIndex) {
         const highlightedInput = document.querySelector("#highlightedInput");
         highlightedInput.innerHTML = '';
 
-        for(var i = 0; i < inputData.length; i++) {
+        for (var i = 0; i < inputData.length; i++) {
             const span = document.createElement('span');
             highlightedInput.appendChild(span);
             span.textContent = inputData[i];
@@ -79,7 +85,7 @@
         }
     }
 
-    async function wait(time){
+    async function wait(time) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 resolve();
@@ -101,6 +107,8 @@
         const result = await WebAssembly.instantiateStreaming(fetch("wasm.wasm"), { js: { mem: memory }, });
 
         const sizeOfStack = result.instance.exports.execute(inputData.length * 4)
+
+        console.log("sizeOfStack", sizeOfStack)
 
         return array.slice(inputData.length + 1, (sizeOfStack / 4) + 1)
     }

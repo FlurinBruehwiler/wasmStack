@@ -54,6 +54,12 @@
                         i32.add
                         local.set $stackPointer
 
+                        ;; if (inputLength == stackPointer) return;
+                        local.get $inputLength
+                        local.get $stackPointer
+                        i32.eq
+                        br_if $return_block 
+
                         ;; load value at stackpointer                    
                         local.get $stackPointer
                         i32.load
@@ -88,6 +94,12 @@
                         i32.const -4
                         i32.add
                         local.set $stackPointer
+
+                        ;; if (inputLength == stackPointer) return;
+                        local.get $inputLength
+                        local.get $stackPointer
+                        i32.eq
+                        br_if $return_block 
 
                         ;; load value at stackpointer  
                         local.get $stackPointer
